@@ -22,17 +22,15 @@
      (define (display-args args)
        (for ([arg-id (in-list (prop-arg-ids (result-prop res)))]
              [arg (in-list args)])
-         (displayln (format "  ~a = ~s" arg-id arg))))
+         (display (format "~a: ~s," arg-id arg))))
 
      (define message
        (with-output-to-string
          (lambda ()
-           (displayln (format "Failed after ~a tests:" (result-tests-run res)))
+           (display (format "{ \"foundbug\": true, \"passed\": ~a, \"counterexample\": " (result-tests-run res)))
 
-           (newline)
            (display-args (result-args res))
 
-           (newline)
            (cond
              [(result-args/smallest res)
               => (lambda (args)
@@ -80,6 +78,7 @@
                         "% "
                         lbl))))]))
 
+
 (define-syntax (check-property* stx)
   (syntax-parse stx
     [(_ (~optional c:expr) p:expr)
@@ -97,6 +96,6 @@
            (list
             (make-check-location location)
             (make-check-info 'name (prop-name p))
-            (make-check-info 'seed (config-seed conf)))
+            (make-check-info 'seessd (config-seed conf)))
            (lambda ()
              (check-property p conf))))]))
