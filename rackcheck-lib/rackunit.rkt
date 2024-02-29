@@ -20,22 +20,10 @@
                         (let ([end (current-inexact-milliseconds)])
                           (cons result (- end start)))))))
 
-(string-join (list "a" "b"))
 
-(string-join (map 
-        (lambda (arg) (format "AAA: ~s," arg))
-        (list "a" "b")
-      ))
 
 (define (zip a b)
   (apply map list (list a b)))
-
-(zip (list "a" "b") (list "c" "d"))
-
-  (string-join (map 
-      (lambda (pair) (format "~a: ~s," (car pair) (cdr pair)))
-      (zip (list "a" "b") (list "c" "d"))
-  ))
 
 
 
