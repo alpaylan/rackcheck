@@ -11,6 +11,7 @@
         - run `raco pkg install`
 - modify `rackcheck-lib/rackunit.rkt`
 - work with `examples/coin.rkt` until you can generate the following json
+    - run `raco test examples/coin.rkt`
 
 ```json
 {
