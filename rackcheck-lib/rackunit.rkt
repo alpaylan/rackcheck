@@ -51,7 +51,7 @@
      (define message
        (with-output-to-string
          (lambda ()
-           (display (format "[|{ \"time\": ~a \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s}|]" time (result-tests-run res) (args-to-string (result-args res))))
+           (display (format "[|{ \"time\": ~a, \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s}|]" time (result-tests-run res) (args-to-string (result-args res))))
 
            (when (and (result-e res) (not (exn:test:check? (result-e res))))
              (parameterize ([current-error-port (current-output-port)])
