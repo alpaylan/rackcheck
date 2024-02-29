@@ -1,4 +1,5 @@
 #lang racket/base
+(require racket/string)
 
 (require (for-syntax racket/base
                      racket/format
@@ -19,6 +20,25 @@
                         (let ([end (current-inexact-milliseconds)])
                           (cons result (- end start)))))))
 
+(string-join (list "a" "b"))
+
+(string-join (map 
+        (lambda (arg) (format "AAA: ~s," arg))
+        (list "a" "b")
+      ))
+
+(define (zip a b)
+  (apply map list (list a b)))
+
+(zip (list "a" "b") (list "c" "d"))
+
+  (string-join (map 
+      (lambda (pair) (format "~a: ~s," (car pair) (cdr pair)))
+      (zip (list "a" "b") (list "c" "d"))
+  ))
+
+
+
 (define-check (check-property p c)
   (define res-with-time (with-time (lambda () (check c p))))
   (define res (car res-with-time))
@@ -32,22 +52,18 @@
              [arg (in-list args)])
          (display (format "~a: ~s," arg-id arg))))
 
+    (define (args-to-string args)
+       (string-join (map 
+            (lambda (pair) (format "~a: ~s" (car pair) (cdr pair)))
+            (zip (prop-arg-ids (result-prop res)) args)
+       ) ", "))
+
+
+
      (define message
        (with-output-to-string
          (lambda ()
-           (display (format "{ \"time\": ~a \"foundbug\": true, \"passed\": ~a, \"counterexample\": " time (result-tests-run res)))
-
-           (display-args (result-args res))
-
-           (cond
-             [(result-args/smallest res)
-              => (lambda (args)
-                   (displayln "Shrunk:")
-                   (newline)
-                   (display-args args))]
-
-             [else
-              (displayln "Could not shrink.")])
+           (display (format "[|{ \"time\": ~a \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s}|]" time (result-tests-run res) (args-to-string (result-args res))))
 
            (when (and (result-e res) (not (exn:test:check? (result-e res))))
              (parameterize ([current-error-port (current-output-port)])
