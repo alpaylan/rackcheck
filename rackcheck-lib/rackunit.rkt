@@ -13,8 +13,16 @@
 (provide
  (rename-out [check-property* check-property]))
 
+(define with-time (lambda (f)
+                    (let ([start (current-inexact-milliseconds)])
+                      (let ([result (f)])
+                        (let ([end (current-inexact-milliseconds)])
+                          (cons result (- end start)))))))
+
 (define-check (check-property p c)
-  (define res (check c p))
+  (define res-with-time (with-time (lambda () (check c p))))
+  (define res (car res-with-time))
+  (define time (cdr res-with-time)) 
   (case (result-status res)
     [(falsified)
      (define e (result-e res))
@@ -27,7 +35,7 @@
      (define message
        (with-output-to-string
          (lambda ()
-           (display (format "{ \"foundbug\": true, \"passed\": ~a, \"counterexample\": " (result-tests-run res)))
+           (display (format "{ \"time\": ~a \"foundbug\": true, \"passed\": ~a, \"counterexample\": " time (result-tests-run res)))
 
            (display-args (result-args res))
 
