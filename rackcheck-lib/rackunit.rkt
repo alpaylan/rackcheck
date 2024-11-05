@@ -30,7 +30,7 @@
 (define-check (check-property p c)
   (define res-with-time (with-time (lambda () (check c p))))
   (define res (car res-with-time))
-  (define time (cdr res-with-time)) 
+  (define time (cdr res-with-time))
   (case (result-status res)
     [(falsified)
      (define e (result-e res))
@@ -40,18 +40,21 @@
              [arg (in-list args)])
          (display (format "~a: ~s," arg-id arg))))
 
-    (define (args-to-string args)
-       (string-join (map 
-            (lambda (pair) (format "~a: ~s" (car pair) (cdr pair)))
-            (zip (prop-arg-ids (result-prop res)) args)
-       ) ", "))
+     (define (args-to-string args)
+       (if args
+           (string-join (map
+                         (lambda (pair) (format "~a: ~s" (car pair) (cdr pair)))
+                         (zip (prop-arg-ids (result-prop res)) args)
+                         ) ", ")
+            "-"
+       ))
 
 
 
      (define message
        (with-output-to-string
          (lambda ()
-           (display (format "[|{ \"time\": ~a, \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s}|]" time (result-tests-run res) (args-to-string (result-args res))))
+           (display (format "[|{ \"search-time\": ~a, \"shrink-time\": ~a, \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s, \"shrinked-counterexample\": ~s}|]" (result-time res) (result-time/smallest res) (result-tests-run res) (args-to-string (result-args res)) (args-to-string (result-args/smallest res))))
 
            (when (and (result-e res) (not (exn:test:check? (result-e res))))
              (parameterize ([current-error-port (current-output-port)])
@@ -105,9 +108,9 @@
                                               (syntax-span stx)))
      #'(let ([conf (~? c (make-config))])
          (with-check-info*
-           (list
-            (make-check-location location)
-            (make-check-info 'name (prop-name p))
-            (make-check-info 'seessd (config-seed conf)))
+             (list
+              (make-check-location location)
+              (make-check-info 'name (prop-name p))
+              (make-check-info 'seessd (config-seed conf)))
            (lambda ()
              (check-property p conf))))]))

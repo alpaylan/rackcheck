@@ -30,7 +30,7 @@
      #'(prop (~? 'name-id (~? name-ex 'unnamed))
              (list 'id ...)
              (gen:let ([id g] ...)
-               (list id ...))
+                      (list id ...))
              (lambda (id ...)
                body ...))]))
 
@@ -46,14 +46,14 @@
   (define prop-addition-commutes ;; noqa
     (property ([a gen:natural]
                [b gen:natural])
-      (= (+ a b)
-         (+ b a))))
+              (= (+ a b)
+                 (+ b a))))
 
   (define prop-addition-is-multiplication ;; noqa
     (property ([a gen:natural]
                [b gen:natural])
-      (= (+ a b)
-         (* a b)))))
+              (= (+ a b)
+                 (* a b)))))
 
 
 ;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -83,11 +83,11 @@
 
 ;; result ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(struct result (config prop labels tests-run status args args/smallest e)
+(struct result (config prop labels tests-run status args args/smallest e time time/smallest)
   #:transparent)
 
-(define (make-result config prop labels tests-run status [args #f] [args/smallest #f] [exception #f]) ;; noqa
-  (result config prop labels tests-run status args args/smallest exception))
+(define (make-result config prop labels tests-run status [args #f] [args/smallest #f] [exception #f] [time #f] [time/shrink #f]) ;; noqa
+  (result config prop labels tests-run status args args/smallest exception time time/shrink))
 
 (module+ private
   (provide (struct-out result)))
@@ -120,7 +120,7 @@
       (with-handlers ([(lambda (_) #t)
                        (lambda (the-exn)
                          (begin0 #f
-                           (set! exn? the-exn)))])
+                                 (set! exn? the-exn)))])
         (parameterize ([current-pseudo-random-generator caller-rng])
           (apply f args))))
 
@@ -135,6 +135,7 @@
              (descend-shrinks (shrink-tree-shrinks (stream-first trees)) value))]))
 
     (random-seed seed)
+    (define start (current-inexact-milliseconds))
     (let loop ([test 0])
       (cond
         [(= test tests)
@@ -151,36 +152,38 @@
             (loop (add1 test))]
 
            [else
+            (define start/shrink (current-inexact-milliseconds))
             (define shrunk?
               (parameterize ([current-labels #f])
                 (descend-shrinks (shrink-tree-shrinks tree) #f)))
-            (make-result c p (current-labels) (add1 test) 'falsified value shrunk? exn?)])]))))
+            (define end/shrink (current-inexact-milliseconds))
+            (make-result c p (current-labels) (add1 test) 'falsified value shrunk? exn? (- end/shrink start/shrink) (- start/shrink start))])]))))
 
-(module+ private
-  (provide
-   (contract-out
-    [check (-> config? prop? result?)])))
+         (module+ private
+           (provide
+            (contract-out
+             [check (-> config? prop? result?)])))
 
-(module+ test
-  (require (prefix-in ru: rackunit))
+         (module+ test
+           (require (prefix-in ru: rackunit))
 
-  (define-syntax-rule (check-status r s)
-    (ru:check-equal? (result-status r) s))
+           (define-syntax-rule (check-status r s)
+             (ru:check-equal? (result-status r) s))
 
-  (check-status
-   (check (make-config) prop-addition-commutes)
-   'passed)
+           (check-status
+            (check (make-config) prop-addition-commutes)
+            'passed)
 
-  (check-status
-   (check (make-config) prop-addition-is-multiplication)
-   'falsified))
+           (check-status
+            (check (make-config) prop-addition-is-multiplication)
+            'falsified))
 
 
-;; common ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+         ;; common ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (make-random-seed)
-  (modulo
-   (for/fold ([n 0])
-             ([b (in-list (bytes->list (crypto-random-bytes 8)))])
-     (arithmetic-shift (+ n b) 8))
-   (expt 2 31)))
+         (define (make-random-seed)
+           (modulo
+            (for/fold ([n 0])
+                      ([b (in-list (bytes->list (crypto-random-bytes 8)))])
+              (arithmetic-shift (+ n b) 8))
+            (expt 2 31)))
