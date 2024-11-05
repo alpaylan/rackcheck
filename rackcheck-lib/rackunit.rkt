@@ -1,8 +1,9 @@
 #lang racket/base
+(require racket/string)
 
 (require (for-syntax racket/base
                      racket/format
-                     syntax/parse)
+                     syntax/parse/pre)
          racket/format
          racket/port
          (except-in rackunit check)
@@ -13,8 +14,23 @@
 (provide
  (rename-out [check-property* check-property]))
 
+(define with-time (lambda (f)
+                    (let ([start (current-inexact-milliseconds)])
+                      (let ([result (f)])
+                        (let ([end (current-inexact-milliseconds)])
+                          (cons result (- end start)))))))
+
+
+
+(define (zip a b)
+  (apply map list (list a b)))
+
+
+
 (define-check (check-property p c)
-  (define res (check c p))
+  (define res-with-time (with-time (lambda () (check c p))))
+  (define res (car res-with-time))
+  (define time (cdr res-with-time))
   (case (result-status res)
     [(falsified)
      (define e (result-e res))
@@ -22,26 +38,23 @@
      (define (display-args args)
        (for ([arg-id (in-list (prop-arg-ids (result-prop res)))]
              [arg (in-list args)])
-         (displayln (format "  ~a = ~s" arg-id arg))))
+         (display (format "~a: ~s," arg-id arg))))
+
+     (define (args-to-string args)
+       (if args
+           (string-join (map
+                         (lambda (pair) (format "~a: ~s" (car pair) (cdr pair)))
+                         (zip (prop-arg-ids (result-prop res)) args)
+                         ) ", ")
+            "-"
+       ))
+
+
 
      (define message
        (with-output-to-string
          (lambda ()
-           (displayln (format "Failed after ~a tests:" (result-tests-run res)))
-
-           (newline)
-           (display-args (result-args res))
-
-           (newline)
-           (cond
-             [(result-args/smallest res)
-              => (lambda (args)
-                   (displayln "Shrunk:")
-                   (newline)
-                   (display-args args))]
-
-             [else
-              (displayln "Could not shrink.")])
+           (display (format "[|{ \"search-time\": ~a, \"shrink-time\": ~a, \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s, \"shrinked-counterexample\": ~s}|]" (result-time res) (result-time/smallest res) (result-tests-run res) (args-to-string (result-args res)) (args-to-string (result-args/smallest res))))
 
            (when (and (result-e res) (not (exn:test:check? (result-e res))))
              (parameterize ([current-error-port (current-output-port)])
@@ -80,6 +93,7 @@
                         "% "
                         lbl))))]))
 
+
 (define-syntax (check-property* stx)
   (syntax-parse stx
     [(_ (~optional c:expr) p:expr)
@@ -94,9 +108,9 @@
                                               (syntax-span stx)))
      #'(let ([conf (~? c (make-config))])
          (with-check-info*
-           (list
-            (make-check-location location)
-            (make-check-info 'name (prop-name p))
-            (make-check-info 'seed (config-seed conf)))
+             (list
+              (make-check-location location)
+              (make-check-info 'name (prop-name p))
+              (make-check-info 'seessd (config-seed conf)))
            (lambda ()
              (check-property p conf))))]))

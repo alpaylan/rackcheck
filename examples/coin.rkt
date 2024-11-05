@@ -47,4 +47,4 @@
         [else                  "overflow"]))
      (if (valid-coin-amount? n)
          (check-match c (coin (== n)))
-         (check-false c)))))
+         (check-true c)))))
