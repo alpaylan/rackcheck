@@ -73,7 +73,7 @@
 (define (make-config #:seed [seed (make-random-seed)]
                      #:tests [tests 100]
                      #:size [size (lambda (n)
-                                    (expt (sub1 n) 2))]
+                                    (inexact->exact (round (log n 2))))]
                      #:deadline [deadline (+ (current-inexact-milliseconds) (* 60 1000))])
   (config seed tests size deadline))
 
