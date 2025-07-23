@@ -7,6 +7,7 @@
          racket/random
          racket/stream
          "gen/syntax.rkt"
+         "gen/core.rkt"
          (submod "gen/shrink-tree.rkt" private))
 
 ;; property ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14,6 +15,8 @@
 (provide
  (rename-out [prop? property?]
              [prop-name property-name])
+ sample-with-time
+ quick-sample
  property
  define-property)
 

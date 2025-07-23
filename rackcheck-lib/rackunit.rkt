@@ -13,7 +13,9 @@
          (submod "prop.rkt" private))
 
 (provide
- (rename-out [check-property* check-property]))
+ (rename-out [check-property* check-property])
+ sample-with-time
+ quick-sample)
 
 (define with-time (lambda (f)
                     (let ([start (current-inexact-milliseconds)])
