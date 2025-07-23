@@ -17,6 +17,9 @@
                [exact-positive-integer?
                 pseudo-random-generator?]
                (listof any/c))]
+  [sample-with-time (->* [gen? exact-positive-integer?]
+                         [pseudo-random-generator?]
+                         (cons/c (listof any/c) real?))]
   [shrink (->* [gen? exact-positive-integer?]
                [pseudo-random-generator?
                 #:limit (or/c #f exact-positive-integer?)
@@ -50,6 +53,14 @@
 (define (sample g [n 10] [rng (current-pseudo-random-generator)])
   (for/list ([s (in-range n)])
     (shrink-tree-val (g rng (expt s 2)))))
+
+(define (sample-with-time g n [rng (current-pseudo-random-generator)])
+  (let ([start (current-inexact-milliseconds)])
+    (let ([result
+      (for/list ([s (in-range n)])
+        (shrink-tree-val (g rng (expt s 2))))])
+          (let ([end (current-inexact-milliseconds)])
+            (cons result (- end start))))))
 
 (define (shrink g
                 size
