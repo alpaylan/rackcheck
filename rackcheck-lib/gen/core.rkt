@@ -22,8 +22,8 @@
                          [pseudo-random-generator?]
                          (listof (cons/c real? any/c)))]
   [quick-sample (->* [gen? exact-positive-integer?]
-                  [pseudo-random-generator?]
-                  string?)]
+                     [pseudo-random-generator?]
+                     string?)]
   [shrink (->* [gen? exact-positive-integer?]
                [pseudo-random-generator?
                 #:limit (or/c #f exact-positive-integer?)
@@ -71,7 +71,10 @@
           (format "~v" args)))
 
     (format "{\"time\": \"~ams\", \"value\": \"~a\"}" time (format-args value)))
-  (string-join (map pair->json result) ", "))
+  (if (null? result)
+      "[]"
+      (format "[~a]"
+              (string-join (map pair->json result) ", "))))
 
 
 (define (sample-with-time g n [rng (current-pseudo-random-generator)])
