@@ -54,9 +54,10 @@
      (define message
        (with-output-to-string
          (lambda ()
-           (display (format "{ \"search-time\": \"~ams\", \"shrink-time\": \"~ams\", \"foundbug\": true, \"status\": \"found_bug\", \"passed\": ~a, \"counterexample\": ~s, \"shrinked-counterexample\": ~s}"
+           (display (format "{ \"search-time\": \"~ams\", \"shrink-time\": \"~ams\", \"time\": \"~ams\", \"foundbug\": true, \"status\": \"found_bug\", \"passed\": ~a, \"counterexample\": ~s, \"shrinked-counterexample\": ~s}"
                             (result-time res)
                             (result-time/smallest res)
+                            (+ (result-time res) (result-time/smallest res))
                             (result-tests-run res)
                             (args-to-string (result-args res))
                             (args-to-string (result-args/smallest res))))
