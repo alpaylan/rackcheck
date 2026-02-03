@@ -74,7 +74,7 @@
                      #:tests [tests 100]
                      #:size [size (lambda (n)
                                     (expt (sub1 n) 2))]
-                     #:deadline [deadline (+ (current-inexact-milliseconds) (* 60 1000))])
+                     #:deadline [deadline (+ (current-inexact-monotonic-milliseconds) (* 60 1000))])
   (config seed tests size deadline))
 
 (module+ private
@@ -135,13 +135,13 @@
              (descend-shrinks (shrink-tree-shrinks (stream-first trees)) value))]))
 
     (random-seed seed)
-    (define start (current-inexact-milliseconds))
+    (define start (current-inexact-monotonic-milliseconds))
     (let loop ([test 0])
       (cond
         [(= test tests)
          (make-result c p (current-labels) test 'passed)]
 
-        [(>= (current-inexact-milliseconds) deadline)
+        [(>= (current-inexact-monotonic-milliseconds) deadline)
          (make-result c p (current-labels) (add1 test) 'timed-out)]
 
         [else
@@ -152,38 +152,38 @@
             (loop (add1 test))]
 
            [else
-            (define start/shrink (current-inexact-milliseconds))
+            (define start/shrink (current-inexact-monotonic-milliseconds))
             (define shrunk?
               (parameterize ([current-labels #f])
                 (descend-shrinks (shrink-tree-shrinks tree) #f)))
-            (define end/shrink (current-inexact-milliseconds))
+            (define end/shrink (current-inexact-monotonic-milliseconds))
             (make-result c p (current-labels) (add1 test) 'falsified value shrunk? exn? (- end/shrink start/shrink) (- start/shrink start))])]))))
 
-         (module+ private
-           (provide
-            (contract-out
-             [check (-> config? prop? result?)])))
+(module+ private
+  (provide
+   (contract-out
+    [check (-> config? prop? result?)])))
 
-         (module+ test
-           (require (prefix-in ru: rackunit))
+(module+ test
+  (require (prefix-in ru: rackunit))
 
-           (define-syntax-rule (check-status r s)
-             (ru:check-equal? (result-status r) s))
+  (define-syntax-rule (check-status r s)
+    (ru:check-equal? (result-status r) s))
 
-           (check-status
-            (check (make-config) prop-addition-commutes)
-            'passed)
+  (check-status
+   (check (make-config) prop-addition-commutes)
+   'passed)
 
-           (check-status
-            (check (make-config) prop-addition-is-multiplication)
-            'falsified))
+  (check-status
+   (check (make-config) prop-addition-is-multiplication)
+   'falsified))
 
 
-         ;; common ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; common ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-         (define (make-random-seed)
-           (modulo
-            (for/fold ([n 0])
-                      ([b (in-list (bytes->list (crypto-random-bytes 8)))])
-              (arithmetic-shift (+ n b) 8))
-            (expt 2 31)))
+(define (make-random-seed)
+  (modulo
+   (for/fold ([n 0])
+             ([b (in-list (bytes->list (crypto-random-bytes 8)))])
+     (arithmetic-shift (+ n b) 8))
+   (expt 2 31)))

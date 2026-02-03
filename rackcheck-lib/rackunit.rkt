@@ -15,9 +15,9 @@
  (rename-out [check-property* check-property]))
 
 (define with-time (lambda (f)
-                    (let ([start (current-inexact-milliseconds)])
+                    (let ([start (current-inexact-monotonic-milliseconds)])
                       (let ([result (f)])
-                        (let ([end (current-inexact-milliseconds)])
+                        (let ([end (current-inexact-monotonic-milliseconds)])
                           (cons result (- end start)))))))
 
 
