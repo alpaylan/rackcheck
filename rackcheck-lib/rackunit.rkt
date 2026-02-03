@@ -54,7 +54,12 @@
      (define message
        (with-output-to-string
          (lambda ()
-           (display (format "{ \"search-time\": ~a, \"shrink-time\": ~a, \"foundbug\": true, \"passed\": ~a, \"counterexample\": ~s, \"shrinked-counterexample\": ~s}" (result-time res) (result-time/smallest res) (result-tests-run res) (args-to-string (result-args res)) (args-to-string (result-args/smallest res))))
+           (display (format "{ \"search-time\": \"~ams\", \"shrink-time\": \"~ams\", \"foundbug\": true, \"status\": \"found_bug\", \"passed\": ~a, \"counterexample\": ~s, \"shrinked-counterexample\": ~s}"
+                            (result-time res)
+                            (result-time/smallest res)
+                            (result-tests-run res)
+                            (args-to-string (result-args res))
+                            (args-to-string (result-args/smallest res))))
 
            (when (and (result-e res) (not (exn:test:check? (result-e res))))
              (parameterize ([current-error-port (current-output-port)])
